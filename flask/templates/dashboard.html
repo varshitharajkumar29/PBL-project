@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Path Pulse Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: linear-gradient(120deg, #eef2f7, #dbe7ff);
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        /* Hero Header */
+        .hero {
+            background: linear-gradient(90deg, #0062ff, #00c6ff);
+            color: white;
+            padding: 30px 0;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Glass Cards */
+        .glass-card {
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 18px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            transition: 0.3s;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Status */
+        .status-safe {
+            background: #28a745;
+            padding: 12px 30px;
+            font-size: 24px;
+            border-radius: 40px;
+            color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .status-sos {
+            background: #dc3545;
+            padding: 12px 30px;
+            font-size: 24px;
+            border-radius: 40px;
+            color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0.6; }
+        }
+
+        #map iframe {
+            border-radius: 12px;
+        }
+
+        footer {
+            margin-top: 50px;
+            padding: 15px;
+            background: #1f2937;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- Hero Section -->
+<div class="hero">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="fw-bold">🚨 Path Pulse</h2>
+            <p class="mb-0">Smart Travel Safety Monitoring</p>
+        </div>
+        <a href="/" class="btn btn-light">Home</a>
+    </div>
+</div>
+
+<div class="container mt-4">
+
+<div class="row">
+
+    <!-- Location Card -->
+    <div class="col-md-7">
+        <div class="glass-card p-4 mb-4">
+            <h5 class="fw-bold">📍 Live Location</h5>
+            <p id="coords" class="text-muted">Fetching location...</p>
+            <div id="map" style="height:300px;"></div>
+        </div>
+    </div>
+
+    <!-- Status Card -->
+    <div class="col-md-5">
+        <div class="glass-card p-4 mb-4 text-center">
+
+            <h5 class="fw-bold">🚦 Safety Status</h5>
+
+            <div id="status" class="status-safe mt-3">
+                SAFE
+            </div>
+
+            <div id="alertBox" class="alert alert-danger mt-4 d-none">
+                🚨 Unusual movement detected! Emergency alert triggered.
+            </div>
+
+            <div class="mt-4">
+                <a href="/history" class="btn btn-primary">
+                    View Location History
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+</div>
+
+<footer class="text-center">
+    Path Pulse Safety System © 2026
+</footer>
+
+<script>
+navigator.geolocation.getCurrentPosition(function(pos) {
+    let lat = pos.coords.latitude;
+    let lon = pos.coords.longitude;
+
+    document.getElementById("coords").innerText =
+        "Latitude: " + lat + " | Longitude: " + lon;
+
+    document.getElementById("map").innerHTML =
+        `<iframe width="100%" height="300"
+        src="https://maps.google.com/maps?q=${lat},${lon}&z=15&output=embed">
+        </iframe>`;
+
+    fetch("/update_location", {
+        method: "POST",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: `lat=${lat}&lon=${lon}`
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === "SAFE") {
+            document.getElementById("status").innerText = "SAFE";
+            document.getElementById("status").className = "status-safe mt-3";
+            document.getElementById("alertBox").classList.add("d-none");
+        } else {
+            document.getElementById("status").innerText = "SOS ALERT";
+            document.getElementById("status").className = "status-sos mt-3";
+            document.getElementById("alertBox").classList.remove("d-none");
+        }
+    });
+});
+</script>
+
+</body>
+</html>
